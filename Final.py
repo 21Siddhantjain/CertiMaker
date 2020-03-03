@@ -67,8 +67,8 @@ class CertiManipulation:
             self.img2 = cv2.imread(self.imgName)
             self.img2 = cv2.resize(self.img2, (self.x_final - self.x_initial, self.y_final - self.y_initial))
             self.ImgOnImg(self.Certificate, self.img2, self.x_initial, self.y_initial, self.x_final, self.y_final)
-            self.counter += 1
-            print("counter : ", self.counter)
+            #self.counter += 1
+            #print("counter : ", self.counter)
             self.x_initial = -1
             self.y_initial = -1
             self.x_final = -1
@@ -146,10 +146,10 @@ class CertiManipulation:
 
 
 def send_an_email(recipient, filename):
-    fromaddr = "gshrey4@gmail.com"
+    fromaddr = "2001siddhantjain@gmail.com"
     toaddr = recipient
     print(toaddr)
-    filename = 'C:\\Users\\Shrey\\Downloads\\CertiMaker-master\\' + filename
+    #filename = 'C:\\Users\\Shrey\\Downloads\\CertiMaker-master\\' + filename
     print(filename)
     msg = MIMEMultipart()
     msg['From'] = fromaddr
@@ -179,13 +179,29 @@ class Names():
         self.window.title("A simple GUI")
         self.window.title("CERTIFICATE MAKER")
 
+        self.drawing = False
+        self.ix, self.iy = -1, -1
+        self.x_initial = -1
+        self.y_initial = -1
+        self.x_final = -1
+        self.y_final = -1
+        self.counter = 0
+        self.var = False
+
+        self.Certificate = ""
+
         self.AddCertiLabel = Label(self.window, text="Add Certificate ---", height=2, width=25).grid(column=0, row=0)
         self.AddCertiTemp = Button(self.window, text="Browse Certificate Template", height=2, width=25,
                                    command=self.OpenCerti).grid(column=1, row=0)
-        self.AddFileLabel = Label(self.window, text="Add File With Data ---", height=2, width=25).grid(column=0, row=2)
+        self.AddFileLabel = Label(self.window, text="Add File With Data ---", height=2, width=25).grid(column=0, row=1)
 
-        self.Send = Button(self.window, text="Choose File and Send Certificates", height=2, width=25, command=self.sendCerti).grid(
-            column=1, row=2)
+        self.AddFile = Button(self.window, text="Choose File", height=2, width=25, command=self.OpenFile).grid(
+            column=1, row=1)
+
+        self.SendCerti = Label(self.window, text="Choose Position and Send", height=2, width=25).grid(column=0, row=2)
+
+        self.Send = Button(self.window, text="Send", height=2, width=25,
+                           command=self.AddText).grid(column=1, row=2)
 
         self.Exit = Button(self.window, text="Exit", height=2, width=25, command=self.window.destroy).grid(column=1,
                                                                                                            row=3)
@@ -199,7 +215,7 @@ class Names():
         self.label = Label(self.window, text="")
         self.label.grid(column=0, row=1)
         self.label.configure(text="Image Added")
-        cv2.imshow('Certificate', self.Certificate)
+
 
     def OpenFile(self):
         self.file = self.BrowseFile()
@@ -221,15 +237,37 @@ class Names():
             self.NameArr.append(value[0])
         for value in self.sheet.iter_rows(min_row=2, min_col=self.email_col, max_col=self.email_col, values_only=True):
             self.EmailArr.append(value[0])
-        return self.NameArr, self.EmailArr
+        print (self.NameArr)
+        print(self.EmailArr)
 
-    def sendCerti(self):
-        self.NameArr, self.EmailArr = self.OpenFile()
+
+    def ReturnPos(self , event, x, y, flags, param):
+        if event == cv2.EVENT_LBUTTONDOWN:
+            self.ix, self.iy = x, y
+        #return self.ix, self.iy
+
+    def AddText(self):
+        cv2.namedWindow(winname='my_drawing')
+        cv2.setMouseCallback('my_drawing', self.ReturnPos())
+        while True:
+            cv2.imshow('my_drawing', self.Certificate)
+            #cv2.imshow('Certificate', self.Certificate)
+            if ((self.ix != -1 and self.iy != -1)):
+                break
+        cv2.destroyAllWindows()
+        self.sendCerti(self.ix, self.iy)
+
+    def PutText(self, img, text, pos, scale, thick):
+        cv2.putText(img, text=text, org=pos, fontFace=cv2.FONT_HERSHEY_SIMPLEX, fontScale=scale, color=(0, 0, 0),
+                    thickness=thick, lineType=cv2.LINE_AA)
+
+    def sendCerti(self , x , y):
+        #self.NameArr, self.EmailArr = self.OpenFile()
         self.length = len(self.NameArr)
         for i in range(self.length):
             cv2.imwrite('cert3.png', self.Certificate)
-            self.Certitemp = cv2.imread('C:\\Users\\Shrey\\Downloads\\CertiMaker-master\\cert3.png')
-            cv2.putText(self.Certitemp, text=self.NameArr[i], org=(340, 288), fontFace=cv2.FONT_HERSHEY_SIMPLEX,
+            self.Certitemp = cv2.imread('cert3.png')
+            cv2.putText(self.Certitemp, text=self.NameArr[i], org=(x, y), fontFace=cv2.FONT_HERSHEY_SIMPLEX,
                         fontScale=1, color=(0, 0, 0), thickness=2, lineType=cv2.LINE_AA)
             cv2.imwrite('Hackathon2020.png', self.Certitemp)
             send_an_email(self.EmailArr[i], 'Hackathon2020.png')
