@@ -146,7 +146,8 @@ class CertiManipulation:
 
 
 def send_an_email(recipient, filename):
-    fromaddr = "2001siddhantjain@gmail.com"
+    fromaddr = input("Enter Email id : ")
+    password = input("Enter Password : ")
     toaddr = recipient
     print(toaddr)
     #filename = 'C:\\Users\\Shrey\\Downloads\\CertiMaker-master\\' + filename
@@ -166,7 +167,7 @@ def send_an_email(recipient, filename):
 
     s = smtplib.SMTP('smtp.gmail.com', 587)
     s.starttls()
-    s.login(fromaddr, "Iostream1!")
+    s.login(fromaddr, password)
     text = msg.as_string()
 
     s.sendmail(fromaddr, toaddr, text)
@@ -190,13 +191,10 @@ class Names():
 
         self.Certificate = ""
 
-        self.AddCertiLabel = Label(self.window, text="Add Certificate ---", height=2, width=25).grid(column=0, row=0)
-        self.AddCertiTemp = Button(self.window, text="Browse Certificate Template", height=2, width=25,
-                                   command=self.OpenCerti).grid(column=1, row=0)
-        self.AddFileLabel = Label(self.window, text="Add File With Data ---", height=2, width=25).grid(column=0, row=1)
+        self.AddFileLabel = Label(self.window, text="Add File With Data ---", height=2, width=25).grid(column=0, row=0)
 
         self.AddFile = Button(self.window, text="Choose File", height=2, width=25, command=self.OpenFile).grid(
-            column=1, row=1)
+            column=1, row=0)
 
         self.SendCerti = Label(self.window, text="Choose Position and Send", height=2, width=25).grid(column=0, row=2)
 
@@ -204,18 +202,11 @@ class Names():
                            command=self.AddText).grid(column=1, row=2)
 
         self.Exit = Button(self.window, text="Exit", height=2, width=25, command=self.window.destroy).grid(column=1,
-                                                                                                           row=3)
+                                                                                                           row=4)
 
     def BrowseFile(self):
         self.filename = filedialog.askopenfilename()
         return self.filename
-
-    def OpenCerti(self):
-        self.Certificate = cv2.imread(self.BrowseFile())
-        self.label = Label(self.window, text="")
-        self.label.grid(column=0, row=1)
-        self.label.configure(text="Image Added")
-
 
     def OpenFile(self):
         self.file = self.BrowseFile()
@@ -244,18 +235,23 @@ class Names():
     def ReturnPos(self , event, x, y, flags, param):
         if event == cv2.EVENT_LBUTTONDOWN:
             self.ix, self.iy = x, y
-        #return self.ix, self.iy
 
     def AddText(self):
-        cv2.namedWindow(winname='my_drawing')
-        cv2.setMouseCallback('my_drawing', self.ReturnPos())
+        self.var = False
+        self.name = self.BrowseFile()
+        self.Certificate = cv2.imread(self.name)
+        cv2.namedWindow(winname='certi')
+        cv2.setMouseCallback('certi', self.ReturnPos)
         while True:
-            cv2.imshow('my_drawing', self.Certificate)
-            #cv2.imshow('Certificate', self.Certificate)
+            cv2.imshow('certi', self.Certificate)
+            if cv2.waitKey(1) & 0xFF == 27:
+                break
             if ((self.ix != -1 and self.iy != -1)):
+                self.var = True
                 break
         cv2.destroyAllWindows()
-        self.sendCerti(self.ix, self.iy)
+        if self.var :
+            self.sendCerti(self.ix, self.iy)
 
     def PutText(self, img, text, pos, scale, thick):
         cv2.putText(img, text=text, org=pos, fontFace=cv2.FONT_HERSHEY_SIMPLEX, fontScale=scale, color=(0, 0, 0),
